@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "*   **Main button ('قفل الجلسة الآن'):** No, it is an outline button with red text and a light red border, not solid black.\n*   **'تعديل الجلسة':** Yes, it is a secondary outline button (black text and border).\n*   **Purple:** No.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1791227654,
+  "id": "202610060314120cad38593bcf41a2",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202610060314120cad38593bcf41a2",
+  "usage": {
+    "completion_tokens": 68,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1720,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1788
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "1) **Yes.** The ID card has a dark header with the \"M\" monogram and white **ImIn** text.\n2) **Yes.** A clear QR code and a barcode (EAN-128) are visible in the ID card section.\n3) **Yes.** Attendance stats use muted dark greys, soft reds, and greens; no neon is present.\n4) **No.** There is no purple or violet; the palette is strictly monochrome B&W with subtle green/red accents.\n5) **No.** All text is readable Arabic; there are no raw translation keys or placeholder text.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1791227756,
+  "id": "2026100603155011dda0ce8ae947a3",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026100603155011dda0ce8ae947a3",
+  "usage": {
+    "completion_tokens": 131,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 4455,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 4586
+  }
+}

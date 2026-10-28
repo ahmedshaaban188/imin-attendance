@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Yes, the metallic IMN monogram is fully visible and centered within the square frame. There are no cut-off edges; the entire design, including the decorative tail of the 'N', fits comfortably within the image boundaries.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1791226718,
+  "id": "202610060258375f7032c8e021431a",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202610060258375f7032c8e021431a",
+  "usage": {
+    "completion_tokens": 46,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 615,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 661
+  }
+}

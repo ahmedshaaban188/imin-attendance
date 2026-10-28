@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) **Yes**, the 3 stat card labels are fully readable and not cut off. They are wrapped on two lines as expected:\n*   **Card 1:** \"محاضرة\" / \"حضرتها\"\n*   **Card 2:** \"آخر حضور\" / \"مسجّل\"\n*   **Card 3:** \"إنذار عليك\"\n\n(2) **No**, there are no overlapping or cut-off elements. All text, icons, and containers within the visible area (including the success toast, header, profile card, stats row, and section title) are properly spaced and fully rendered.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1791207481,
+  "id": "202610052137578a4452ccfad24a51",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202610052137578a4452ccfad24a51",
+  "usage": {
+    "completion_tokens": 132,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 383,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 515
+  }
+}

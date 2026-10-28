@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "1. **Background & Text:** Yes, the background is a deep near-black (`#121212` or similar), and the primary text is light (white/light gray), providing excellent contrast.\n2. **Primary Button:** Yes, the \"تسجيل الدخول\" (Login) button is now white with dark text, making it stand out as the primary action.\n3. **Logo Tile:** Yes, the metallic monogram (\"M\") in the logo tile remains clearly visible and maintains its metallic/3D effect against the dark background.\n4. **Readability:** No, all text appears highly readable. The contrast ratios for labels, placeholders, and body text are well within accessible limits.\n5. **Leftover Purple:** No, there is no visible purple. The design is strictly monochrome (black, white, and shades of gray), with only a slight gold/amber tint on the \"وضع صارم\" (Strict Mode) toggle.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1791227350,
+  "id": "20261006030905866b1fa842dc4ebe",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20261006030905866b1fa842dc4ebe",
+  "usage": {
+    "completion_tokens": 197,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1750,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1947
+  }
+}

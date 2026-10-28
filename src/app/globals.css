@@ -1,0 +1,641 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-cairo);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --animate-drift: drift 22s ease-in-out infinite alternate;
+  --animate-drift-slow: drift 30s ease-in-out infinite alternate-reverse;
+  --animate-float-y: float-y 6s ease-in-out infinite;
+  --animate-row-enter: row-enter 0.45s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+  --animate-pop-in: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ==========================================================================
+   ImIn | إعادة تعريف درجات Tailwind الوظيفية بنسخ مطفية (desaturated)
+   تتماشى مع الهوية الأحادية (أبيض/أسود) — الألوان تفضل مميزة لكن بدون نيون
+   ========================================================================== */
+
+@theme {
+  /* أخضر حرجي مطفي (حاضر) */
+  --color-emerald-300: #aec9ba;
+  --color-emerald-400: #8bb19c;
+  --color-emerald-500: #5e8c71;
+  --color-emerald-600: #476e56;
+  --color-emerald-700: #385846;
+
+  /* برونزي مطفي (متأخر/تحذير) */
+  --color-amber-300: #ccb37e;
+  --color-amber-400: #b3965a;
+  --color-amber-500: #987a2e;
+  --color-amber-600: #7d6225;
+  --color-amber-700: #644d1c;
+
+  /* طوبي مطفي (غائب/خطأ) */
+  --color-rose-300: #d2aca6;
+  --color-rose-400: #c38b84;
+  --color-rose-500: #ab6a63;
+  --color-rose-600: #96524c;
+
+  /* رمادي-أزرق مطفي (معلومات) */
+  --color-sky-400: #8798a8;
+  --color-sky-500: #67798b;
+  --color-sky-600: #50616e;
+
+  /* رمادي محايد (مكان البنفسجي سابقًا) */
+  --color-violet-400: #9a9da3;
+  --color-violet-500: #7f8288;
+  --color-violet-600: #64676d;
+
+  /* أحمر مطفي (نفس عائلة الطوبي) */
+  --color-red-300: #d2aca6;
+  --color-red-400: #c38b84;
+  --color-red-600: #96524c;
+
+  /* شبكة أمان للدرجات المتفرقة */
+  --color-fuchsia-500: #8b8e94;
+  --color-teal-500: #5e8c71;
+  --color-cyan-500: #67798b;
+  --color-orange-400: #b3965a;
+  --color-yellow-400: #b3965a;
+}
+
+/* ==========================================================================
+   ImIn | الهوية الأحادية — حبر على ورق (Ink on Paper)
+   * فاتح: ورق أوف-وايت محايد + حبر أسود
+   * داكن: فحم عميق + طباشير فاتح
+   * لا تدرجات لونية — اللون الوحيد المسموح: إشارات الحالة المطفية أعلاه
+   ========================================================================== */
+
+:root {
+  --radius: 1rem;
+  --background: #f7f7f5;
+  --foreground: #17181c;
+  --card: #ffffff;
+  --card-foreground: #17181c;
+  --popover: #ffffff;
+  --popover-foreground: #17181c;
+  --primary: #17181c;
+  --primary-foreground: #fafaf8;
+  --secondary: #edede9;
+  --secondary-foreground: #3e4046;
+  --muted: #f0f0ed;
+  --muted-foreground: #696b71;
+  --accent: #e9e9e5;
+  --accent-foreground: #17181c;
+  --destructive: #a64843;
+  --border: #e4e4df;
+  --input: #dcdcd7;
+  --ring: #a0a2a8;
+  --success: #3a6b50;
+  --success-foreground: #ffffff;
+  --warning: #8a6410;
+  --warning-foreground: #ffffff;
+  --chart-1: #1f2125;
+  --chart-2: #6e7177;
+  --chart-3: #a9acb1;
+  --chart-4: #d6d7d9;
+  --chart-5: #8c7a5c;
+  --sidebar: #fbfbf9;
+  --sidebar-foreground: #17181c;
+  --sidebar-primary: #17181c;
+  --sidebar-primary-foreground: #fafaf8;
+  --sidebar-accent: #e9e9e5;
+  --sidebar-accent-foreground: #17181c;
+  --sidebar-border: #e4e4df;
+  --sidebar-ring: #a0a2a8;
+}
+
+.dark {
+  --background: #0d0e11;
+  --foreground: #ededf0;
+  --card: #15161a;
+  --card-foreground: #ededf0;
+  --popover: #15161a;
+  --popover-foreground: #ededf0;
+  --primary: #f0f0f2;
+  --primary-foreground: #14151a;
+  --secondary: #202127;
+  --secondary-foreground: #c7c9cd;
+  --muted: #1e1f24;
+  --muted-foreground: #9a9ca3;
+  --accent: #26272d;
+  --accent-foreground: #e9e9eb;
+  --destructive: #d6908a;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.14);
+  --ring: #70737a;
+  --success: #7fb595;
+  --success-foreground: #0c2117;
+  --warning: #c9a65b;
+  --warning-foreground: #2a2005;
+  --chart-1: #e8e9eb;
+  --chart-2: #9ea1a7;
+  --chart-3: #63666d;
+  --chart-4: #45474d;
+  --chart-5: #a98d62;
+  --sidebar: #121318;
+  --sidebar-foreground: #ededf0;
+  --sidebar-primary: #f0f0f2;
+  --sidebar-primary-foreground: #14151a;
+  --sidebar-accent: #26272d;
+  --sidebar-accent-foreground: #e9e9eb;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #70737a;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+    transition:
+      background-color 0.45s ease,
+      color 0.45s ease;
+  }
+  ::selection {
+    background: rgba(140, 142, 148, 0.32);
+  }
+}
+
+/* ==========================================================================
+   ImIn | نظام Glassmorphism (الزجاج المصنفر) — نسخة محايدة
+   ========================================================================== */
+
+.glass-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.44));
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    0 12px 40px -14px rgba(20, 22, 26, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  transition:
+    background 0.45s ease,
+    border-color 0.45s ease,
+    box-shadow 0.45s ease;
+}
+
+.dark .glass-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.035));
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow:
+    0 18px 50px -18px rgba(0, 0, 0, 0.62),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.62);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 8px 30px -12px rgba(20, 22, 26, 0.12);
+  transition:
+    background 0.45s ease,
+    border-color 0.45s ease,
+    box-shadow 0.45s ease;
+}
+
+.dark .glass-nav {
+  background: rgba(14, 15, 19, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 34px -14px rgba(0, 0, 0, 0.68);
+}
+
+.glass-chip {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transition:
+    background 0.45s ease,
+    border-color 0.45s ease;
+}
+
+.dark .glass-chip {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* الزر الرئيسي — حبر صلب (بدون تدرجات) */
+.btn-gradient {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: 0 10px 24px -10px rgba(20, 22, 26, 0.4);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.25s ease,
+    filter 0.25s ease,
+    opacity 0.2s ease;
+}
+
+.btn-gradient:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow: 0 14px 32px -12px rgba(20, 22, 26, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-gradient:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+}
+
+.btn-gradient:disabled {
+  opacity: 0.55;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.dark .btn-gradient {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.55);
+}
+
+.dark .btn-gradient:hover:not(:disabled) {
+  box-shadow: 0 16px 38px -12px rgba(0, 0, 0, 0.65);
+}
+
+/* زر ناجح — أخضر حرجي مطفي صلب */
+.btn-success {
+  background: var(--success);
+  color: #ffffff;
+  box-shadow: 0 10px 24px -10px rgba(58, 107, 80, 0.45);
+  transition:
+    transform 0.18s ease,
+    filter 0.25s ease,
+    opacity 0.2s ease;
+}
+
+.btn-success:hover:not(:disabled) {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+.btn-success:disabled {
+  opacity: 0.6;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.dark .btn-success {
+  background: #4e7a62;
+  color: #ffffff;
+  box-shadow: 0 10px 26px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* شريط حبري داكن دائم (رأس البطاقة الرقمية) — ثابت في الوضعين */
+.ink-strip {
+  background: linear-gradient(145deg, #1d1f24 0%, #0f1014 100%);
+  color: #ffffff;
+}
+
+/* نص التمييز — حبر ثانوي صلب (بدون تدرج) */
+.text-gradient {
+  color: #55575d;
+}
+
+.dark .text-gradient {
+  color: #b9bbc0;
+}
+
+/* ==========================================================================
+   الشعار: بلاطة داكنة للمونوجرام + شارة "In" المقلوبة
+   ========================================================================== */
+
+.logo-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 6px 18px -8px rgba(15, 16, 20, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  flex-shrink: 0;
+}
+
+.brand-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline-start: 0.2rem;
+  padding: 0.08em 0.44em;
+  border-radius: 0.42em;
+  background: var(--foreground);
+  color: var(--background);
+  font-weight: 900;
+  font-size: 0.76em;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  transform: translateY(-0.05em);
+}
+
+/* ==========================================================================
+   الخلفية: كرات ضوئية عائمة (Orbs) — رمادية خافتة
+   ========================================================================== */
+
+.orbs {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(85px);
+  opacity: 0.4;
+  will-change: transform;
+}
+
+.orb-1 {
+  width: 460px;
+  height: 460px;
+  top: -140px;
+  inset-inline-end: -120px;
+  background: radial-gradient(circle, rgba(158, 160, 166, 0.55), transparent 70%);
+  animation: drift 22s ease-in-out infinite alternate;
+}
+
+.orb-2 {
+  width: 380px;
+  height: 380px;
+  bottom: -120px;
+  inset-inline-start: -100px;
+  background: radial-gradient(circle, rgba(112, 115, 122, 0.4), transparent 70%);
+  animation: drift 30s ease-in-out infinite alternate-reverse;
+}
+
+.orb-3 {
+  width: 300px;
+  height: 300px;
+  top: 38%;
+  inset-inline-start: 32%;
+  background: radial-gradient(circle, rgba(76, 79, 86, 0.22), transparent 70%);
+  opacity: 0.3;
+  animation: drift-slow 36s ease-in-out infinite alternate;
+}
+
+.dark .orb {
+  opacity: 0.22;
+}
+
+.dark .orb-1 {
+  background: radial-gradient(circle, rgba(180, 182, 188, 0.28), transparent 70%);
+}
+
+.dark .orb-2 {
+  background: radial-gradient(circle, rgba(120, 123, 130, 0.22), transparent 70%);
+}
+
+.dark .orb-3 {
+  background: radial-gradient(circle, rgba(90, 93, 100, 0.16), transparent 70%);
+}
+
+@keyframes drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(60px, 45px) scale(1.14);
+  }
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+/* ==========================================================================
+   عناصر الحالة اللحظية والمؤشرات
+   ========================================================================== */
+
+.live-dot {
+  position: relative;
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  background: #5e8c71;
+  flex-shrink: 0;
+}
+
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 2px solid rgba(94, 140, 113, 0.5);
+  animation: ping-soft 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.live-dot.live-dot--error {
+  background: #ab6a63;
+}
+
+.live-dot.live-dot--error::after {
+  border-color: rgba(171, 106, 99, 0.5);
+}
+
+@keyframes ping-soft {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.9;
+  }
+  80%,
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+/* صفوف قائمة الحضور: دخول انسيابي */
+.row-enter {
+  animation: row-enter 0.45s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+}
+
+@keyframes row-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pop-in {
+  animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ==========================================================================
+   عناصر إضافية
+   ========================================================================== */
+
+/* منطقة رفع ملفات (متقطعة الحدود) — رمادية */
+.drop-zone {
+  border: 2px dashed rgba(23, 24, 28, 0.28);
+  border-radius: var(--radius-lg);
+  background: rgba(23, 24, 28, 0.03);
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease;
+}
+
+.drop-zone:hover,
+.drop-zone.dragover {
+  border-color: rgba(23, 24, 28, 0.62);
+  background: rgba(23, 24, 28, 0.06);
+}
+
+.dark .drop-zone {
+  border-color: rgba(237, 237, 240, 0.26);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dark .drop-zone:hover,
+.dark .drop-zone.dragover {
+  border-color: rgba(237, 237, 240, 0.6);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* بلاطة بيضاء لعرض رمز QR / الباركود (لأجهزة المسح) */
+.code-tile {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  box-shadow: 0 6px 22px -10px rgba(20, 22, 26, 0.28);
+}
+
+/* شريط تمرير أنيق للقوائم الطويلة — رمادي */
+.nice-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(110, 113, 119, 0.4) transparent;
+}
+
+.nice-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nice-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nice-scroll::-webkit-scrollbar-thumb {
+  background: rgba(110, 113, 119, 0.38);
+  border-radius: 999px;
+}
+
+.dark .nice-scroll::-webkit-scrollbar-thumb {
+  background: rgba(158, 161, 167, 0.38);
+}
+
+/* خطوط إدخال زجاجية — تركيز بالحبر */
+.input-glass {
+  height: 3rem;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.45s ease;
+}
+
+.input-glass:focus {
+  border-color: #17181c;
+  box-shadow: 0 0 0 4px rgba(23, 24, 28, 0.14);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.dark .input-glass {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.dark .input-glass:focus {
+  border-color: #e8e8ea;
+  box-shadow: 0 0 0 4px rgba(237, 237, 240, 0.16);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+/* منع تحديد النص على العناصر الزخرفية */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* احترام تفضيل تقليل الحركة */
+@media (prefers-reduced-motion: reduce) {
+  .orb,
+  .live-dot::after,
+  .row-enter,
+  .pop-in {
+    animation: none !important;
+  }
+}

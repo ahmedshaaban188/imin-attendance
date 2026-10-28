@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "1) Yes, there is a purple circle in the ID card section.\n2) No, the text is generally readable with good contrast.\n3) Yes, the ID card has a dark (black) header.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1791227999,
+  "id": "2026100603195643a57f0222ff426f",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026100603195643a57f0222ff426f",
+  "usage": {
+    "completion_tokens": 44,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 4414,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 4458
+  }
+}

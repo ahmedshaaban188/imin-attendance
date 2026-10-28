@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "1) **Radar/Map Circle:** Yes. The radar circle is a **muted reddish-brown/dark red** dashed ring, and the center dot is **dark ink/white** (not bright purple).\n2) **Distance Progress Bar:** No, it appears as a **muted dark grey/black** bar (not green).\n3) **Check-in Button:** It has a **muted reddish-brown background** with white text and a shield icon.\n4) **Any Purple?** **Yes**, there is a distinct **bright/lavender purple dot** inside the mini map widget in the top-right student profile card.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1791227776,
+  "id": "20261006031612f3a4b86538c3433a",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20261006031612f3a4b86538c3433a",
+  "usage": {
+    "completion_tokens": 134,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1754,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1888
+  }
+}

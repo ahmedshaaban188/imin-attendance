@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "1) **No** (Monochrome B&W, no purple/violet).\n2) **No** (Buttons are outlined or light gray, not solid black).\n3) **No** (All text is in Arabic; no raw keys visible).\n4) **No** (Layout is clean and readable).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1791227634,
+  "id": "20261006031350fc1acfe2c1714ce8",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20261006031350fc1acfe2c1714ce8",
+  "usage": {
+    "completion_tokens": 63,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 3812,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 3875
+  }
+}
