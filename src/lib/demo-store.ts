@@ -50,6 +50,10 @@ interface DemoUser {
   device_id: string | null;
   /** متى رُبط الحساب بهذا الجهاز (آخر ربط) */
   device_linked_at: string | null;
+  /** هاش كلمة المرور (يُحسب في المتصفح — لا تُخزَّن كلمة المرور الأصلية أبداً) */
+  password_hash: string | null;
+  /** ملح الهاش الخاص بهذا المستخدم */
+  password_salt: string | null;
   created_at: string;
 }
 
@@ -192,6 +196,8 @@ function normalizeUser(user: Record<string, unknown>): DemoUser {
     device_id: typeof user.device_id === "string" && user.device_id ? user.device_id : null,
     device_linked_at:
       typeof user.device_linked_at === "string" ? user.device_linked_at : null,
+    password_hash: typeof user.password_hash === "string" ? user.password_hash : null,
+    password_salt: typeof user.password_salt === "string" ? user.password_salt : null,
     created_at: String(user.created_at ?? new Date().toISOString()),
   };
 }
@@ -401,8 +407,18 @@ function sessionWithProfessor(session: DemoSession) {
 }
 
 /** نسخة عامة من المستخدم — بدون أسرار OTP */
-function publicUser(user: DemoUser): Omit<DemoUser, "otp_code" | "otp_expires_at"> {
-  const { otp_code: _otpCode, otp_expires_at: _otpExpires, ...safe } = user;
+function publicUser(user: DemoUser): Omit<DemoUser, "otp_code" | "otp_expires_at" | "password_hash" | "password_salt"> {
+  const {
+    otp_code: _otpCode,
+    otp_expires_at: _otpExpires,
+    password_hash: _passwordHash,
+    password_salt: _passwordSalt,
+    ...safe
+  } = user;
+  void _otpCode;
+  void _otpExpires;
+  void _passwordHash;
+  void _passwordSalt;
   return safe;
 }
 
@@ -665,10 +681,35 @@ export async function demoAction(
   switch (action) {
     /* ------------------------------ المصادقة ------------------------------ */
 
+    case "get-login-salt": {
+      // الخطوة الأولى من تسجيل الدخول: إرجاع ملح الحساب فقط (بدون الهاش)
+      // حتى يحسب المتصفح الهاش بمطابقة صحيحة — وإلا ترجع أخطاء واضحة
+      const email = asText(payload.email).toLowerCase();
+      const universityId = asText(payload.university_id);
+      const user = db.users.find(
+        (row) => row.email === email && row.university_id === universityId
+      );
+      if (!user) {
+        logSuspicious("validation_bypass", `محاولة دخول ببيانات غير مسجلة (${email})`, {
+          actor_name: email,
+          university_id: universityId,
+        });
+        fail("أنت غير مسجل في نظام ImIn — أنشئ حساباً جديداً أولاً.", "USER_NOT_FOUND");
+      }
+      if (!user.password_salt || !user.password_hash) {
+        fail(
+          "هذا الحساب أُنشئ قبل إضافة كلمات المرور — أنشئ حساباً جديداً بنفس البريد.",
+          "LEGACY_ACCOUNT"
+        );
+      }
+      return { salt: user.password_salt };
+    }
+
     case "login": {
       const email = asText(payload.email).toLowerCase();
       const universityId = asText(payload.university_id);
       const deviceId = asText(payload.device_id);
+      const passwordHash = asText(payload.password_hash);
       const user = db.users.find(
         (row) => row.email === email && row.university_id === universityId
       );
@@ -682,6 +723,21 @@ export async function demoAction(
         return null;
       }
 
+      // كلمة المرور إلزامية — الحسابات القديمة (قبل التحديث) لا تُسمح بالدخول
+      if (!user.password_hash || !user.password_salt) {
+        fail(
+          "هذا الحساب أُنشئ قبل إضافة كلمات المرور — أنشئ حساباً جديداً بنفس البريد.",
+          "LEGACY_ACCOUNT"
+        );
+      }
+      if (!passwordHash || passwordHash !== user.password_hash) {
+        logSuspicious("validation_bypass", `كلمة مرور خاطئة (${email})`, {
+          actor_name: email,
+          university_id: universityId,
+        });
+        fail("كلمة المرور غير صحيحة.", "BAD_PASSWORD");
+      }
+
       // حماية مشاركة الحساب: الجهاز الحالي يجب أن يكون الجهاز المرتبط
       verifyDeviceBinding(user, deviceId);
 
@@ -693,10 +749,33 @@ export async function demoAction(
       return db.users.some((row) => row.email === email);
     }
 
+    case "university-id-exists": {
+      const universityId = asText(payload.university_id);
+      return db.users.some((row) => row.university_id === universityId);
+    }
+
+    case "get-user": {
+      // تُستخدم للتحقق من هوية المستخدم ودوره من السيرفر عند فتح اللوحة
+      // (مصدر الحقيقة بدل بيانات الجلسة القابلة للتعديل من المتصفح)
+      const userId = asText(payload.user_id);
+      const user = db.users.find((row) => row.id === userId);
+      return user ? publicUser(user) : null;
+    }
+
     case "register": {
       const email = asText(payload.email).toLowerCase();
       if (db.users.some((row) => row.email === email)) {
         fail("هذا البريد الإلكتروني مسجّل مسبقاً.", "EMAIL_EXISTS");
+      }
+      const universityId = asText(payload.university_id);
+      if (db.users.some((row) => row.university_id === universityId)) {
+        fail("هذا الرقم الجامعي/الوظيفي مسجّل مسبقاً لحساب آخر.", "UNIVERSITY_ID_EXISTS");
+      }
+      // كلمة المرور إلزامية — تصل هاشاً + ملحاً من المتصفح
+      const passwordHash = asText(payload.password_hash);
+      const passwordSalt = asText(payload.password_salt);
+      if (!passwordHash || !passwordSalt) {
+        fail("كلمة المرور مطلوبة لإنشاء الحساب.", "BAD_REQUEST");
       }
       const role = payload.role === "professor" ? "professor" : "student";
 
@@ -734,6 +813,8 @@ export async function demoAction(
             : null,
         device_id: asText(payload.device_id) || null,
         device_linked_at: asText(payload.device_id) ? new Date().toISOString() : null,
+        password_hash: passwordHash,
+        password_salt: passwordSalt,
         created_at: new Date().toISOString(),
       };
       db.users.push(user);

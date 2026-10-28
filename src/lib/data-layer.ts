@@ -138,16 +138,26 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 export async function findUserByLogin(
   email: string,
   universityId: string,
+  password: string,
   deviceId?: string
 ): Promise<AppUser | null> {
   if (isDemoMode()) {
+    // خطوتان: (1) طلب ملح الحساب (2) حساب الهاش في المتصفح ومقارنته على السيرفر
+    const { hashPassword } = await import("./password");
+    const credential = await demoApi<{ salt: string }>("get-login-salt", {
+      email,
+      university_id: universityId,
+    });
+    const passwordHash = await hashPassword(password, credential.salt);
     return demoApi<AppUser | null>("login", {
       email,
       university_id: universityId,
       device_id: deviceId ?? "",
+      password_hash: passwordHash,
     });
   }
 
+  // وضع Supabase: نجلب الملح والهاش ثم نطابق محلياً في المتصفح
   const { data, error } = await supabase
     .from(USERS_TABLE)
     .select("*")
@@ -156,7 +166,99 @@ export async function findUserByLogin(
     .limit(1);
 
   if (error) throw error;
-  return data && data.length > 0 ? (data[0] as AppUser) : null;
+  const row =
+    data && data.length > 0
+      ? (data[0] as AppUser & {
+          password_hash: string | null;
+          password_salt: string | null;
+        })
+      : null;
+  if (!row) return null;
+
+  if (!row.password_hash || !row.password_salt) {
+    const legacy = new Error(
+      "هذا الحساب أُنشئ قبل إضافة كلمات المرور — أنشئ حساباً جديداً بنفس البريد."
+    ) as Error & { code?: string };
+    legacy.code = "LEGACY_ACCOUNT";
+    throw legacy;
+  }
+
+  const { verifyPassword } = await import("./password");
+  const ok = await verifyPassword(
+    password,
+    row.password_salt,
+    row.password_hash
+  );
+  if (!ok) {
+    const bad = new Error("كلمة المرور غير صحيحة.") as Error & { code?: string };
+    bad.code = "BAD_PASSWORD";
+    throw bad;
+  }
+
+  // لا نُرجع بيانات الهاش للواجهة أبداً
+  const {
+    password_hash: _hash,
+    password_salt: _salt,
+    ...safeUser
+  } = row;
+  void _hash;
+  void _salt;
+  return safeUser;
+}
+
+/** التحقق من أن الرقم الجامعي/الوظيفي مستخدم لحساب آخر */
+export async function universityIdExists(
+  universityId: string
+): Promise<boolean> {
+  if (isDemoMode()) {
+    return demoApi<boolean>("university-id-exists", {
+      university_id: universityId,
+    });
+  }
+
+  const { data, error } = await supabase
+    .from(USERS_TABLE)
+    .select("id")
+    .eq("university_id", universityId)
+    .limit(1);
+
+  if (error) throw error;
+  return Boolean(data && data.length > 0);
+}
+
+/**
+ * جلب المستخدم من قاعدة البيانات بالمعرّف — مصدر الحقيقة للدور (role)
+ * عند فتح اللوحات، بدل الثقة في بيانات الجلسة القابلة للتعديل.
+ */
+export async function fetchUserById(userId: string): Promise<AppUser | null> {
+  if (!userId) return null;
+
+  if (isDemoMode()) {
+    return demoApi<AppUser | null>("get-user", { user_id: userId });
+  }
+
+  const { data, error } = await supabase
+    .from(USERS_TABLE)
+    .select("*")
+    .eq("id", userId)
+    .limit(1);
+
+  if (error) throw error;
+  if (!data || data.length === 0) return null;
+  const row = data[0] as AppUser & {
+    password_hash?: string | null;
+    password_salt?: string | null;
+    otp_code?: string | null;
+    otp_expires_at?: string | null;
+  };
+  // نسخة نظيفة بدون أي أسرار
+  const { password_hash, password_salt, otp_code, otp_expires_at, ...safe } =
+    row;
+  void password_hash;
+  void password_salt;
+  void otp_code;
+  void otp_expires_at;
+  return safe as AppUser;
 }
 
 /** التحقق من أن البريد مسجّل مسبقاً */
@@ -237,6 +339,9 @@ export async function insertUser(params: {
   academic_year?: string | null;
   /** معرّف الجهاز — يُربط الحساب به فور إنشائه */
   device_id?: string;
+  /** كلمة المرور تُمرّ هاشاً + ملحاً (تُحسب في المتصفح) */
+  password_hash: string;
+  password_salt: string;
 }): Promise<RegisterResult> {
   if (isDemoMode()) {
     return demoApi<RegisterResult>("register", {
@@ -264,7 +369,10 @@ export async function insertUser(params: {
         ? new Date(Date.now() + OTP_TTL_MS).toISOString()
         : null,
     })
-    .select()
+    // أعمدة صريحة فقط — لا نُرجع الهاشات أو أكواد OTP للواجهة
+    .select(
+      "id, full_name, email, university_id, role, id_card_url, id_card_back_url, personal_photo_url, subject, status, email_verified, faculty, program, academic_year, device_id, device_linked_at, created_at"
+    )
     .single();
 
   if (error) throw error;

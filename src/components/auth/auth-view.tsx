@@ -30,6 +30,8 @@ import {
   FlipHorizontal,
   CheckCircle2,
   KeyRound,
+  Eye,
+  EyeOff,
   ShieldCheck,
   ShieldQuestion,
   Smartphone,
@@ -54,12 +56,14 @@ import { DemoBadge } from "@/components/demo-badge";
 import {
   findUserByLogin,
   emailExists,
+  universityIdExists,
   uploadIdCard,
   insertUser,
   verifyOtp,
   requestOtp,
   requestDeviceTransfer,
 } from "@/lib/data-layer";
+import { hashNewPassword, passwordPolicyError } from "@/lib/password";
 import { compressImage, safePhotoPath, validateImageFile } from "@/lib/image-utils";
 import { saveUserSession, takeLogoutReason } from "@/lib/supabaseClient";
 import { getDeviceId } from "@/lib/device";
@@ -96,6 +100,8 @@ type FieldKey =
   | "personal"
   | "loginEmail"
   | "loginId"
+  | "loginPassword"
+  | "registerPassword"
 
 /** رسالة خطأ صغيرة تُعرض تحت الحقل */
 function FieldError({ message }: { message?: string }) {
@@ -247,11 +253,15 @@ export function AuthView({ onSuccess }: { onSuccess: (user: AppUser) => void }) 
   // حقول تسجيل الدخول
   const [loginEmail, setLoginEmail] = React.useState("");
   const [loginId, setLoginId] = React.useState("");
+  const [loginPassword, setLoginPassword] = React.useState("");
+  const [showLoginPassword, setShowLoginPassword] = React.useState(false);
 
   // حقول إنشاء الحساب
   const [fullName, setFullName] = React.useState("");
   const [registerEmail, setRegisterEmail] = React.useState("");
   const [universityId, setUniversityId] = React.useState("");
+  const [registerPassword, setRegisterPassword] = React.useState("");
+  const [showRegisterPassword, setShowRegisterPassword] = React.useState(false);
   const [role, setRole] = React.useState<UserRole>("student");
   const [subject, setSubject] = React.useState("");
 
@@ -363,6 +373,9 @@ export function AuthView({ onSuccess }: { onSuccess: (user: AppUser) => void }) 
     if (!UNIVERSITY_ID_REGEX.test(idNumber)) {
       errors.loginId = t("auth.idError");
     }
+    if (!loginPassword) {
+      errors.loginPassword = t("auth.passwordRequired");
+    }
     setFieldErrors(errors);
     if (Object.values(errors).some(Boolean)) return;
 
@@ -374,6 +387,7 @@ export function AuthView({ onSuccess }: { onSuccess: (user: AppUser) => void }) 
       const user = await findUserByLogin(
         email,
         idNumber,
+        loginPassword,
         getDeviceId()
       );
 
@@ -414,6 +428,7 @@ export function AuthView({ onSuccess }: { onSuccess: (user: AppUser) => void }) 
       }
 
       saveUserSession(user);
+      setLoginPassword("");
       toast.success(t("auth.welcomeBack", { name: user.full_name.split(" ")[0] }));
       onSuccess(user);
     } catch (error) {
@@ -423,6 +438,11 @@ export function AuthView({ onSuccess }: { onSuccess: (user: AppUser) => void }) 
         setDeviceMismatch(true);
         setTransferRequested(false);
         toast.error(t("auth.deviceMismatchToast"));
+        return;
+      }
+      if (code === "BAD_PASSWORD" || code === "LEGACY_ACCOUNT") {
+        setFieldErrors({ loginPassword: t("auth.passwordWrong") });
+        toast.error(t("auth.passwordWrong"));
         return;
       }
       toast.error(localizedError(error, locale));
@@ -475,6 +495,10 @@ export function AuthView({ onSuccess }: { onSuccess: (user: AppUser) => void }) 
     if (!UNIVERSITY_ID_REGEX.test(idNumber)) {
       errors.universityId = t("auth.idRegisterError");
     }
+    const passwordPolicyMsg = passwordPolicyError(registerPassword);
+    if (passwordPolicyMsg) {
+      errors.registerPassword = t("auth.passwordPolicy");
+    }
 
     // الدكتور: اسم المادة إلزامي
     if (role === "professor") {
@@ -504,11 +528,17 @@ export function AuthView({ onSuccess }: { onSuccess: (user: AppUser) => void }) 
 
     setBusy(true);
     try {
-      // 1) التأكد أن البريد غير مستخدم مسبقاً
+      // 1) التأكد أن البريد والرقم الجامعي غير مستخدمين مسبقاً
       const exists = await emailExists(email);
       if (exists) {
         setFieldErrors({ email: t("auth.emailExistsField") });
         toast.error(t("auth.emailExistsField"));
+        return;
+      }
+      const idTaken = await universityIdExists(idNumber);
+      if (idTaken) {
+        setFieldErrors({ universityId: t("auth.universityIdTaken") });
+        toast.error(t("auth.universityIdTaken"));
         return;
       }
 
@@ -526,6 +556,8 @@ export function AuthView({ onSuccess }: { onSuccess: (user: AppUser) => void }) 
       ]);
 
       // 3) حفظ بيانات المستخدم — يُربط الحساب بهذا الجهاز فوراً (device_id)
+      //    كلمة المرور تُحسب هاشاً + ملحاً في المتصفح ولا تُرسل الأصلية أبداً
+      const { salt, hash } = await hashNewPassword(registerPassword);
       const result = await insertUser({
         full_name: name,
         email,
@@ -539,7 +571,10 @@ export function AuthView({ onSuccess }: { onSuccess: (user: AppUser) => void }) 
         faculty: role === "student" ? faculty.trim() || null : null,
         program: role === "student" ? program.trim() || null : null,
         academic_year: role === "student" ? academicYear.trim() || null : null,
+        password_hash: hash,
+        password_salt: salt,
       });
+      setRegisterPassword("");
 
       if (role === "professor") {
         setOtpEmail(email);
@@ -893,6 +928,41 @@ export function AuthView({ onSuccess }: { onSuccess: (user: AppUser) => void }) 
                   <FieldError message={fieldErrors.loginId} />
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="login-password" className="text-sm font-bold">
+                    {t("auth.passwordLabel")}
+                  </Label>
+                  <div className="relative">
+                    <KeyRound className="pointer-events-none absolute start-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="login-password"
+                      type={showLoginPassword ? "text" : "password"}
+                      dir="ltr"
+                      className={`input-glass ps-11 pe-11 ${fieldErrors.loginPassword ? "border-rose-500/60 focus-visible:ring-rose-500/30" : ""}`}
+                      placeholder={t("auth.passwordPlaceholder")}
+                      value={loginPassword}
+                      onChange={(e) => {
+                        setLoginPassword(e.target.value);
+                        clearFieldError("loginPassword");
+                      }}
+                      autoComplete="current-password"
+                      disabled={busy}
+                      required
+                      aria-invalid={Boolean(fieldErrors.loginPassword)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginPassword((value) => !value)}
+                      className="absolute end-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                      aria-label={showLoginPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                      tabIndex={-1}
+                    >
+                      {showLoginPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                    </button>
+                  </div>
+                  <FieldError message={fieldErrors.loginPassword} />
+                </div>
+
                 {/* بانر ربط الجهاز — يظهر فقط عند رفض الدخول من جهاز مختلف */}
                 {deviceMismatch && (
                   <div
@@ -1089,6 +1159,45 @@ export function AuthView({ onSuccess }: { onSuccess: (user: AppUser) => void }) 
                     </div>
                     <FieldError message={fieldErrors.universityId} />
                   </div>
+                </div>
+
+                {/* كلمة المرور */}
+                <div className="space-y-2">
+                  <Label htmlFor="register-password" className="text-sm font-bold">
+                    {t("auth.passwordLabel")}
+                  </Label>
+                  <div className="relative">
+                    <KeyRound className="pointer-events-none absolute start-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="register-password"
+                      type={showRegisterPassword ? "text" : "password"}
+                      dir="ltr"
+                      className={`input-glass ps-11 pe-11 ${fieldErrors.registerPassword ? "border-rose-500/60 focus-visible:ring-rose-500/30" : ""}`}
+                      placeholder={t("auth.passwordPlaceholder")}
+                      value={registerPassword}
+                      onChange={(e) => {
+                        setRegisterPassword(e.target.value);
+                        clearFieldError("registerPassword");
+                      }}
+                      autoComplete="new-password"
+                      disabled={busy}
+                      required
+                      aria-invalid={Boolean(fieldErrors.registerPassword)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowRegisterPassword((value) => !value)}
+                      className="absolute end-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                      aria-label={showRegisterPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                      tabIndex={-1}
+                    >
+                      {showRegisterPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                    </button>
+                  </div>
+                  <FieldError message={fieldErrors.registerPassword} />
+                  <p className="text-xs text-muted-foreground">
+                    {t("auth.passwordHintRegister")}
+                  </p>
                 </div>
 
                 {/* ============ بيانات حسب الدور ============ */}

@@ -36,8 +36,17 @@ create table if not exists public.users (
   otp_expires_at     timestamptz,
   device_id          text,
   device_linked_at   timestamptz,
+  -- كلمة المرور (مضافة في تحديث الأمان):
+  -- تُحسب في المتصفح بصيغة v1$iterations$hash مع ملح فريد لكل مستخدم
+  -- ولا تُخزَّن كلمة المرور الأصلية في أي مكان إطلاقاً
+  password_hash      text,
+  password_salt      text,
   created_at         timestamptz not null default now()
 );
+
+-- ترحيل آمن للحسابات القديمة (إن وُجد جدول من نسخة سابقة بدون أعمدة كلمة المرور)
+alter table public.users add column if not exists password_hash text;
+alter table public.users add column if not exists password_salt text;
 
 comment on table public.users is 'ImIn: مستخدمو النظام (طلاب ودكاترة)';
 comment on column public.users.id_card_url        is 'ImIn: صورة البطاقة — الوجه الأمامي (للطلاب)';

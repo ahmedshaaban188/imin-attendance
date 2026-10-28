@@ -33,6 +33,7 @@ import {
   saveUserSession,
   setLogoutReason,
 } from "@/lib/supabaseClient";
+import { fetchUserById } from "@/lib/data-layer";
 import { useI18n } from "@/lib/i18n";
 import type { AppUser } from "@/lib/types";
 
@@ -43,15 +44,48 @@ export default function HomePage() {
   const [view, setView] = React.useState<ActiveView>("loading");
   const [user, setUser] = React.useState<AppUser | null>(null);
 
-  /* قراءة المستخدم الحالي من sessionStorage عند تحميل الصفحة */
+  /* ------------------------------------------------------------------ */
+  /*  عند تحميل الصفحة: لا نثق ببيانات الجلسة المخزنة مباشرة — بل نعيد     */
+  /*  التحقق من المستخدم ودوره (role) من قاعدة البيانات نفسها، فلا يستطيع */
+  /*  أحد فتح لوحة الدكتور بتعديل بيانات المتصفح يدوياً (DevTools).       */
+  /*  عند فشل الاتصال فقط نعتمد النسخة المحفوظة مؤقتاً (سلوك offline ودّي) */
+  /* ------------------------------------------------------------------ */
   React.useEffect(() => {
-    const storedUser = getUserSession();
-    if (storedUser) {
-      setUser(storedUser);
-      setView(storedUser.role === "professor" ? "professor" : "student");
-    } else {
-      setView("auth");
+    let cancelled = false;
+
+    async function restoreSession() {
+      const cached = getUserSession();
+      if (!cached) {
+        if (!cancelled) setView("auth");
+        return;
+      }
+
+      try {
+        const verified = await fetchUserById(cached.id);
+        if (cancelled) return;
+
+        if (verified) {
+          // مصدر الحقيقة هو قاعدة البيانات — نحدّث النسخة المحلية منها
+          saveUserSession(verified);
+          setUser(verified);
+          setView(verified.role === "professor" ? "professor" : "student");
+        } else {
+          // الحساب لم يعد موجوداً في قاعدة البيانات — خروج احتياطي
+          clearUserSession();
+          setView("auth");
+        }
+      } catch {
+        // انقطاع الاتصال: نعتمد النسخة المحفوظة مؤقتاً
+        if (cancelled) return;
+        setUser(cached);
+        setView(cached.role === "professor" ? "professor" : "student");
+      }
     }
+
+    void restoreSession();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   /* بعد تسجيل الدخول أو إنشاء حساب جديد بنجاح */
